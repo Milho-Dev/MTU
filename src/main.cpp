@@ -23,9 +23,6 @@ SNMPAgent snmp = SNMPAgent("public");
 ValueCallback *temperatureOID;
 ValueCallback *humidityOID;
 
-ValueCallback *ledOID;
-int ledStatus = 0;
-
 TimestampCallback *timestampCallbackOID;
 uint32_t tensOfMillisCounter = 0;
 
@@ -35,10 +32,6 @@ void setup()
 {
     Serial.begin(9600);
     Serial.println("Start!");
-
-    // LED config
-    pinMode(LED_GPIO_PIN, OUTPUT);
-    digitalWrite(LED_GPIO_PIN, 0);
 
     // Setup DHT22
     dht.setup(DHT_GPIO_PIN, DHTesp::DHT22);
@@ -71,8 +64,6 @@ void setup()
     temperatureOID = snmp.addIntegerHandler(TEMPERATURE_OID, &temperature);
     humidityOID = snmp.addIntegerHandler(HUMIDITY_OID, &humidity);
 
-    ledOID = snmp.addIntegerHandler(LED_OID, &ledStatus, true);
-
     timestampCallbackOID = (TimestampCallback *)snmp.addTimestampHandler(TIMESTAMP_OID, &tensOfMillisCounter);
 
     snmp.sortHandlers();
@@ -81,14 +72,6 @@ void setup()
 void loop()
 {
     snmp.loop();
-
-    // Set LED
-    if (ledOID->setOccurred)
-    {
-        Serial.printf("Setted value: %i\n", ledStatus);
-        digitalWrite(LED_GPIO_PIN, (ledStatus % 2 == 0) ? 0 : 1);
-        ledOID->setOccurred = false;
-    }
 
     // Timestamp counting
     tensOfMillisCounter = millis() / 10;
